@@ -16,12 +16,16 @@ dependencies = [
   "click>=8.1.6",
   "openai>=1.2.4",
   "rich>=13.5.2",
-  "tqdm",
+  "tqdm",  
+]
+[project.optional-dependencies]
+memory = [
   "transformers>=4.51.0",
   "sentence-transformers>=2.7.0",
   "faiss-cpu>=1.7.4",
   "torch"
 ]
+
 
 [project.scripts]
 tera = "tera.cli:main" 

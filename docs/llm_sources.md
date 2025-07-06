@@ -1,0 +1,9 @@
+- 阿里百炼平台-Qwen大模型
+    - base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    - api_key获取: https://bailian.console.aliyun.com/?tab=model#/api-key
+    - 模型名: https://bailian.console.aliyun.com/?tab=model#/model-market 寻找有免费额度的模型
+- Chat Anywhere
+    - base_url: https://api.chatanywhere.tech/v1
+    - api_key获取: https://github.com/chatanywhere/GPT_API_free?tab=readme-ov-file#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8
+    - 模型名: 2025.7.6更新：“免费版支持gpt-4o，gpt-4.1一天5次；支持deepseek-r1, deepseek-v3一天30次，支持gpt-4o-mini，gpt-3.5-turbo，gpt-4.1-mini，gpt-4.1-nano一天200次”
+- 任何兼容OpenAI API的模型

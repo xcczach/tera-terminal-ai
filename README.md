@@ -6,7 +6,7 @@
 
 # Tera Terminal AI 终端助手
 
-![Tera Terminal AI](./docs/imgs/tera.png){width=50%}
+<img src="./docs/imgs/tera.png" alt="Tera Terminal AI" width="50%">
 
 Tera Terminal AI 是一款轻量级的命令行大语言模型聊天代理，支持多 **LLM 源**、多 **角色设定**、**代码片段执行反馈**以及可选 **长期记忆**，专注极简与跨平台体验。
 

@@ -12,7 +12,7 @@ except ImportError:  # pragma: no cover
     print("未安装 openai，请先执行: pip install openai")
     sys.exit(1)
 
-from .storage import get_active_source
+from .storage import get_active_source, get_active_character
 
 __all__ = ["chat_mode"]
 
@@ -26,7 +26,12 @@ def chat_mode() -> None:
 
     client = OpenAI(api_key=src["api_key"], base_url=src["base_url"])
 
+    # 加入角色 system message
+    _char_name, char_setting = get_active_character()
     messages: List[Dict[str, Any]] = []
+    if char_setting:
+        messages.append({"role": "system", "content": char_setting})
+
     click.echo("进入聊天模式，输入 exit / quit 退出。\n")
 
     while True:

@@ -14,6 +14,7 @@ __all__ = [
     "load_store",
     "save_store",
     "get_active_source",
+    "get_active_character",
 ]
 
 # data 目录位于项目根目录（即 src 之上）
@@ -24,8 +25,13 @@ SOURCES_FILE: Path = DATA_DIR / "sources.json"
 
 
 def _default_store() -> Dict[str, Any]:
-    """返回默认空存储结构。"""
-    return {"sources": {}, "active": None}
+    """返回默认空存储结构，包括角色。"""
+    return {
+        "sources": {},
+        "active": None,  # 当前源
+        "characters": {"default": ""},  # 角色名 -> prompt
+        "active_character": "default",  # 当前角色
+    }
 
 
 def load_store() -> Dict[str, Any]:
@@ -34,10 +40,21 @@ def load_store() -> Dict[str, Any]:
         return _default_store()
     try:
         with SOURCES_FILE.open("r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
     except json.JSONDecodeError:
         # 若文件损坏，回到初始状态
         return _default_store()
+
+    # 确保新字段存在（向后兼容旧文件）
+    changed = False
+    default = _default_store()
+    for key, value in default.items():
+        if key not in data:
+            data[key] = value
+            changed = True
+    if changed:
+        save_store(data)
+    return data
 
 
 def save_store(data: Dict[str, Any]) -> None:
@@ -52,4 +69,12 @@ def get_active_source() -> Dict[str, Any] | None:
     active_name: str | None = store.get("active")
     if not active_name:
         return None
-    return store["sources"].get(active_name) 
+    return store["sources"].get(active_name)
+
+
+def get_active_character() -> tuple[str, str]:
+    """返回 (角色名, 角色设定)。若未设置则返回 ("default", "")."""
+    store = load_store()
+    name: str = store.get("active_character", "default")
+    setting = store["characters"].get(name, "")
+    return name, setting 

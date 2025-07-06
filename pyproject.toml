@@ -15,6 +15,7 @@ requires-python = ">=3.9"
 dependencies = [
   "click>=8.1.6",
   "openai>=1.2.4",
+  "rich>=13.5.2",
 ]
 
 [project.scripts]

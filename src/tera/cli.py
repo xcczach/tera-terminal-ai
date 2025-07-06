@@ -36,7 +36,7 @@ def source_add() -> None:
     """添加新的 API 源。"""
     name = click.prompt("请输入源名称")
     base_url = click.prompt("请输入 API base_url", default="https://api.openai.com/v1")
-    api_key = click.prompt("请输入 API Key", hide_input=True)
+    api_key = click.prompt("请输入 API Key")
     model = click.prompt("请输入模型名", default="gpt-3.5-turbo")
 
     store = load_store()
@@ -45,12 +45,16 @@ def source_add() -> None:
         "api_key": api_key,
         "model": model,
     }
-    # 如未设置当前源，则自动设为刚添加的源
-    if not store.get("active"):
-        store["active"] = name
+    # 保存源信息
     save_store(store)
     click.echo(f"已添加源 {name}")
     click.echo(f"API Key: {api_key}")
+
+    # 若未设置当前源，或用户确认切换，则切换
+    if not store.get("active") or click.confirm(f"是否立即切换到源 {name}?", default=True):
+        store["active"] = name
+        save_store(store)
+        click.echo(f"已切换到源 {name}")
 
 
 @source.command("use")

@@ -4,9 +4,12 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../LICENSE)
 
+
 # Tera Terminal AI
 
-Tera Terminal AI is a lightweight terminal chat agent supporting multiple **LLM endpoints**, multiple **role presets**, **code execution feedback**, and optional **long-term memory**, focusing on minimalism and cross-platform use.
+![Tera Terminal AI](imgs/tera.png)
+
+Tera Terminal AI is a lightweight terminal LLM chat agent supporting multiple **LLM endpoints**, multiple **role presets**, **code execution feedback**, and optional **long-term memory**, focusing on minimalism and cross-platform use.
 
 > **Supported OS:** Windows / macOS / Linux (Python 3.9+ required)
 

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tera-terminal-ai"
+version = "0.1.0"
+description = "命令行 AI 聊天工具，支持多源配置。"
+authors = [
+  { name="Your Name", email="you@example.com" },
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "click>=8.1.6",
+  "openai>=1.2.4",
+]
+
+[project.scripts]
+tera = "tera.cli:main" 

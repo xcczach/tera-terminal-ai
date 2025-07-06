@@ -27,7 +27,7 @@ def _get_project_root() -> Path:
     """
     if getattr(sys, "frozen", False):  # PyInstaller 环境
         return Path(sys.executable).resolve().parent
-    return Path(__file__).resolve().parent.parent
+    return Path(__file__).resolve().parent.parent.parent
 
 
 # data 目录位于项目根目录

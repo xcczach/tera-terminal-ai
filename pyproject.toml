@@ -7,7 +7,7 @@ name = "tera-terminal-ai"
 version = "0.1.0"
 description = "命令行 AI 聊天工具，支持多源配置。"
 authors = [
-  { name="Your Name", email="you@example.com" },
+  { name="xcczach", email="2867389537@qq.com" },
 ]
 license = { text = "MIT" }
 readme = "README.md"

@@ -25,6 +25,25 @@ def tera_cli(ctx: click.Context) -> None:  # noqa: D401
         chat_mode()
 
 
+# ========== help 命令 ==========
+
+
+@tera_cli.command("help", context_settings={"ignore_unknown_options": True, "allow_extra_args": True})
+@click.pass_context
+def _help(ctx: click.Context) -> None:
+    """显示帮助信息，与 --help 等价。"""
+    if ctx.args:
+        # 若指定子命令，显示子命令帮助
+        cmd_name = ctx.args[0]
+        cmd = tera_cli.get_command(ctx, cmd_name)
+        if cmd is None:
+            click.echo(f"未知命令: {cmd_name}")
+            ctx.exit(1)
+        click.echo(cmd.get_help(ctx))
+    else:
+        click.echo(tera_cli.get_help(ctx))
+
+
 # ===== 子命令: source =====
 
 @tera_cli.group()

@@ -10,6 +10,7 @@ from .storage import (
     load_store,
     save_store,
     get_active_source,
+    get_active_character,
 )
 from .chat import chat_mode
 
@@ -203,4 +204,43 @@ def character_delete(name: str) -> None:
     if store.get("active_character") == name:
         store["active_character"] = "default" if "default" in store["characters"] else None
     save_store(store)
-    click.echo(f"已删除角色 {name}") 
+    click.echo(f"已删除角色 {name}")
+
+
+############################################
+# memory 开关
+############################################
+
+
+@tera_cli.group()
+def memory() -> None:
+    """记忆功能开关。"""
+
+
+@memory.command("on")
+def memory_on() -> None:
+    store = load_store()
+    if store.get("memory_enabled"):
+        click.echo("记忆功能已启用。")
+        return
+    store["memory_enabled"] = True
+    save_store(store)
+    click.echo("已启用记忆功能。首次使用将自动下载嵌入模型并可能较慢。")
+
+
+@memory.command("off")
+def memory_off() -> None:
+    store = load_store()
+    if not store.get("memory_enabled"):
+        click.echo("记忆功能本已关闭。")
+        return
+    store["memory_enabled"] = False
+    save_store(store)
+    click.echo("已关闭记忆功能。后续聊天将不再记录与检索记忆。")
+
+
+@memory.command("show")
+def memory_show() -> None:
+    enabled = load_store().get("memory_enabled")
+    status = "启用" if enabled else "关闭"
+    click.echo(f"记忆功能当前状态：{status}") 

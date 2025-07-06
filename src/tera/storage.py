@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any, Dict
+import sys
 
 __all__ = [
     "PROJECT_ROOT",
@@ -17,8 +18,20 @@ __all__ = [
     "get_active_character",
 ]
 
-# data 目录位于项目根目录（即 src 之上）
-PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent
+def _get_project_root() -> Path:
+    """返回运行时的项目根目录。
+
+    - PyInstaller 单文件模式下，`sys.executable` 指向可执行文件路径；
+      我们以其所在目录为根。
+    - 源码运行时，仍使用包文件的上级目录。
+    """
+    if getattr(sys, "frozen", False):  # PyInstaller 环境
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent.parent
+
+
+# data 目录位于项目根目录
+PROJECT_ROOT: Path = _get_project_root()
 DATA_DIR: Path = PROJECT_ROOT / "data"
 DATA_DIR.mkdir(exist_ok=True)
 SOURCES_FILE: Path = DATA_DIR / "sources.json"
@@ -31,6 +44,7 @@ def _default_store() -> Dict[str, Any]:
         "active": None,  # 当前源
         "characters": {"default": ""},  # 角色名 -> prompt
         "active_character": "default",  # 当前角色
+        "memory_enabled": False,  # 是否启用记忆
     }
 
 

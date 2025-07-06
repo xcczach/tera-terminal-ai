@@ -7,7 +7,7 @@
 
 # Tera Terminal AI
 
-![Tera Terminal AI](imgs/tera.png){width=50%}
+<img src="imgs/tera.png" alt="Tera Terminal AI" width="50%">
 
 Tera Terminal AI is a lightweight terminal LLM chat agent supporting multiple **LLM endpoints**, multiple **role presets**, **code execution feedback**, and optional **long-term memory**, focusing on minimalism and cross-platform use.
 

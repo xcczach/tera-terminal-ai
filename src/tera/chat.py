@@ -9,6 +9,7 @@ from rich.markdown import Markdown
 from tqdm.auto import tqdm
 
 import click
+import subprocess, tempfile, re, textwrap
 
 try:
     from openai import OpenAI
@@ -23,6 +24,8 @@ __all__ = ["chat_mode"]
 
 def chat_mode() -> None:
     """启动交互式聊天。"""
+    # 全局声明需位于变量首次赋值之前
+    global console, messages, _mem_enabled, append_chat_log, _model_reply_and_show, _char_name
     src = get_active_source()
     if not src:
         click.echo("尚未配置任何源，请先执行 `tera source add`。")
@@ -33,10 +36,38 @@ def chat_mode() -> None:
 
     # 加入角色 system message
     _char_name, char_setting = get_active_character()
-    messages: List[Dict[str, Any]] = []
+    messages = []  # type: List[Dict[str, Any]]
     if char_setting:
         char_setting = f"你是{_char_name}，聊天过程中要遵循以下设定：\n{char_setting}\n\"系统提示：\"后不是用户输入，你需要遵循系统提示做出响应。"
         messages.append({"role": "system", "content": char_setting})
+
+    # -------- 预定义回复输出函数（供代码块执行反馈使用） -------- #
+    def _model_reply_and_show() -> None:
+        """使用 messages 调用模型并显示回复（流式优先）"""
+        try:
+            stream_resp2 = client.chat.completions.create(
+                model=src["model"],
+                messages=messages,
+                stream=True,
+            )
+            parts: list[str] = []
+            for ch in tqdm(stream_resp2, desc=f"{_char_name}思考中..."):
+                delta = ch.choices[0].delta
+                ct = getattr(delta, "content", None)
+                if ct:
+                    parts.append(ct)
+            resp_text = "".join(parts).strip()
+        except Exception:
+            resp_text = client.chat.completions.create(
+                model=src["model"],
+                messages=messages,
+            ).choices[0].message.content.strip()
+
+        console.print(f"[bold green]{_char_name}>[/bold green]")
+        console.print(Markdown(resp_text))
+        messages.append({"role": "assistant", "content": resp_text})
+        if _mem_enabled:
+            append_chat_log(_char_name, "assistant", resp_text)
 
     # -------- 异步提炼上一轮聊天记忆 -------- #
     import threading
@@ -149,6 +180,7 @@ def chat_mode() -> None:
         reply = "".join(reply_parts).strip()
         console.print(f"[bold green]{_char_name}>[/bold green]")
         console.print(Markdown(reply))
+
     except Exception:
         try:
             response = client.chat.completions.create(
@@ -166,6 +198,8 @@ def chat_mode() -> None:
         messages.append({"role": "assistant", "content": reply})
         if _mem_enabled:
             append_chat_log(_char_name, "assistant", reply)
+        # 处理代码块执行 & 反馈
+        process_code_blocks(reply)
 
     while True:
         try:
@@ -226,4 +260,76 @@ def chat_mode() -> None:
         messages.append({"role": "assistant", "content": reply})
         if _mem_enabled:
             append_chat_log(_char_name, "assistant", reply)
+        # 处理代码块执行 & 反馈
+        process_code_blocks(reply)
+
+# ===== 代码执行辅助 (全局) =====
+
+CODE_BLOCK_RE = re.compile(r"```(\w*)\n([\s\S]*?)```", re.MULTILINE)
+
+
+def extract_code_blocks(text: str):
+    """返回 [(lang_hint, code)]"""
+    return CODE_BLOCK_RE.findall(text)
+
+
+def detect_lang(lang_hint: str, code: str):
+    hint = lang_hint.lower()
+    if hint in {"python", "py"}:
+        return "python"
+    if hint in {"bash", "sh", "shell"}:
+        return "shell"
+    # heuristic
+    if code.lstrip().startswith("import ") or "def " in code:
+        return "python"
+    return "shell"
+
+
+def execute_code(lang: str, code: str) -> str:
+    """执行代码并返回输出"""
+    if lang == "python":
+        # 确保文件声明 UTF-8 编码，避免含中文时报错
+        if not code.lstrip().startswith("#"):
+            code = "# -*- coding: utf-8 -*-\n" + code
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".py", encoding="utf-8") as fp:
+            fp.write(code)
+        tmp_path = fp.name
+        result = subprocess.run([sys.executable, tmp_path], capture_output=True, text=True, shell=False)
+    else:  # shell
+        result = subprocess.run(code, capture_output=True, text=True, shell=True)
+    out = result.stdout
+    err = result.stderr
+    return (out + ("\nSTDERR:\n" + err if err else "")).strip() or "(无输出)"
+
+# ---------------------------------------------------------------------------
+# 处理 AI 回复中的代码块：执行 & 反馈
+# ---------------------------------------------------------------------------
+
+
+def process_code_blocks(reply_text: str):
+    """检测、询问、执行代码块，最终一次性把所有执行结果反馈给模型。"""
+    pairs: list[tuple[str, str, str]] = []  # (lang, code, output)
+    for lang_hint, code_block in extract_code_blocks(reply_text):
+        lang = detect_lang(lang_hint, code_block)
+        if click.confirm(f"检测到 {lang} 代码块，是否执行？", default=False):
+            exec_out = execute_code(lang, code_block)
+            console.print(f"[yellow]执行输出:[/]\n{exec_out}")
+            pairs.append((lang, code_block, exec_out))
+
+    if not pairs:
+        return
+
+    # 组合反馈文本
+    parts = ["(以下是我在本地执行你上一条消息中所有代码块后的输出)"]
+    for lang, code, out in pairs:
+        parts.append(
+            f"```{lang}\n{code}\n```\n执行结果:\n```text\n{out}\n```"
+        )
+    combined = "\n\n".join(parts)
+
+    messages.append({"role": "user", "content": combined})
+    if _mem_enabled:
+        append_chat_log(_char_name, "user", combined)
+
+    _model_reply_and_show()
  

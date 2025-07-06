@@ -6,6 +6,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 from rich.console import Console
 from rich.markdown import Markdown
+from tqdm.auto import tqdm
 
 import click
 
@@ -140,7 +141,7 @@ def chat_mode() -> None:
             stream=True,
         )
         reply_parts: list[str] = []
-        for chunk in stream_resp:
+        for chunk in tqdm(stream_resp, desc=f"{_char_name}启动中..."):
             delta = chunk.choices[0].delta
             content_part = getattr(delta, "content", None)
             if content_part:
@@ -199,7 +200,7 @@ def chat_mode() -> None:
             )
 
             reply_parts: list[str] = []
-            for chunk in stream_resp:
+            for chunk in tqdm(stream_resp, desc=f"{_char_name}思考中..."):
                 delta = chunk.choices[0].delta
                 content_part = getattr(delta, "content", None)
                 if content_part:
